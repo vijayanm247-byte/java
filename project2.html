@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Muthu's Gaming Galaxy</title>
+
+<style>
+:root {
+  --primary: #00ffcc;
+  --dark: #0f172a;
+  --card: rgba(255,255,255,0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #020617, #0f172a);
+  color: white;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: black;
+}
+
+nav a {
+  color: var(--primary);
+  margin-left: 15px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+section {
+  display: none;
+  padding: 40px;
+}
+
+section.active {
+  display: block;
+}
+
+button {
+  padding: 10px 20px;
+  background: var(--primary);
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+input {
+  display: block;
+  width: 260px;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 12px;
+  transition: transform 0.3s;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+footer {
+  background: black;
+  padding: 10px;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>🎮 MUTHU'S GAMING GALAXY</h2>
+  <nav>
+    <a href="#" data-page="home">Home</a>
+    <a href="#" data-page="games">Games</a>
+    <a href="#" data-page="leaderboard">Leaderboard</a>
+    <a href="#" data-page="profile">Profile</a>
+    <a href="#" data-page="login" id="authLink">Login</a>
+  </nav>
+</header>
+
+<!-- HOME -->
+<section id="home" class="active">
+  <h1>Welcome Gamer 🚀</h1>
+  <p>Play games. Track scores. Rule the leaderboard.</p>
+</section>
+
+<!-- LOGIN -->
+<section id="login">
+  <h2>Login / Signup</h2>
+  <input id="username" placeholder="Username">
+  <button onclick="login()">Enter Galaxy</button>
+</section>
+
+<!-- GAMES -->
+<section id="games">
+  <h2>🎯 Game Library</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Space Shooter</h3>
+      <p>Score-based arcade game</p>
+      <button onclick="playGame('Space Shooter')">Play</button>
+    </div>
+    <div class="card">
+      <h3>Racing X</h3>
+      <p>Fast & furious racing</p>
+      <button onclick="playGame('Racing X')">Play</button>
+    </div>
+    <div class="card">
+      <h3>Puzzle Master</h3>
+      <p>Brain challenge game</p>
+      <button onclick="playGame('Puzzle Master')">Play</button>
+    </div>
+  </div>
+</section>
+
+<!-- LEADERBOARD -->
+<section id="leaderboard">
+  <h2>🏆 Leaderboard</h2>
+  <ul id="scores"></ul>
+</section>
+
+<!-- PROFILE -->
+<section id="profile">
+  <h2>👤 Profile</h2>
+  <p><strong>Username:</strong> <span id="profileName"></span></p>
+  <p><strong>Total Games Played:</strong> <span id="gamesPlayed">0</span></p>
+  <button onclick="logout()">Logout</button>
+</section>
+
+<footer>
+  © 2025 Muthu's Gaming Galaxy
+</footer>
+
+<script>
+const sections = document.querySelectorAll("section");
+const navLinks = document.querySelectorAll("nav a");
+
+function showPage(id) {
+  sections.forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+navLinks.forEach(link => {
+  link.addEventListener("click", e => {
+    e.preventDefault();
+    showPage(link.dataset.page);
+  });
+});
+
+/* AUTH SYSTEM */
+function login() {
+  const user = document.getElementById("username").value;
+  if (!user) return alert("Enter username");
+
+  localStorage.setItem("user", user);
+  localStorage.setItem("played", 0);
+  document.getElementById("authLink").textContent = "Logout";
+  loadProfile();
+  showPage("home");
+}
+
+function logout() {
+  localStorage.clear();
+  showPage("login");
+}
+
+/* GAME SYSTEM */
+function playGame(game) {
+  if (!localStorage.getItem("user")) {
+    alert("Please login first!");
+    return;
+  }
+
+  let score = Math.floor(Math.random() * 1000);
+  let scores = JSON.parse(localStorage.getItem("scores")) || [];
+  scores.push({ user: localStorage.getItem("user"), game, score });
+  localStorage.setItem("scores", JSON.stringify(scores));
+
+  let played = Number(localStorage.getItem("played")) + 1;
+  localStorage.setItem("played", played);
+
+  alert(`🎮 ${game} finished!\nScore: ${score}`);
+}
+
+/* LEADERBOARD */
+function loadLeaderboard() {
+  let scores = JSON.parse(localStorage.getItem("scores")) || [];
+  scores.sort((a,b) => b.score - a.score);
+
+  document.getElementById("scores").innerHTML = scores
+    .slice(0,5)
+    .map(s => `<li>${s.user} - ${s.game} - ${s.score}</li>`)
+    .join("");
+}
+
+/* PROFILE */
+function loadProfile() {
+  document.getElementById("profileName").textContent =
+    localStorage.getItem("user");
+  document.getElementById("gamesPlayed").textContent =
+    localStorage.getItem("played");
+}
+
+/* AUTO LOAD */
+window.onload = () => {
+  if (localStorage.getItem("user")) {
+    document.getElementById("authLink").textContent = "Logout";
+    loadProfile();
+  }
+  loadLeaderboard();
+};
+</script>
+
+</body>
+</html>
